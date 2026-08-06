@@ -1,0 +1,27 @@
+/* 1. Importer Tailwind (Version 4) */
+@import 'tailwindcss';
+
+/* 2. Définir où Tailwind doit chercher les classes */
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../js/'; /* IMPORTANT : Ajoute ça pour que Tailwind lise tes composants React */
+
+/* 3. Définir ton thème et tes couleurs personnalisées */
+@theme {
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    /* Ajout des couleurs YannShop */
+    --color-yann-blue: #0F2B5B;
+    --color-yann-cyan: #00B4D8;
+}
+
+/* 4. Importer Font Awesome via CDN (Le plus simple pour commencer) */
+@import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+
+/* 5. Tes styles personnalisés (si besoin plus tard) */
+body {
+    @apply bg-gray-50 text-gray-800;
+}
