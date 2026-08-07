@@ -31,17 +31,17 @@ export default function ProductCard({ product }: { product: Product }) {
     return (
         <div className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 p-4 border border-gray-100 hover:border-yann-cyan/20 h-full flex flex-col group">
 
-            {/* Image du produit */}
-            <Link href={`/product/${product.slug}`} className="block relative h-52 bg-gray-100 rounded-lg overflow-hidden mb-4">
+            {/* Image du produit (remplissage complet avec object-cover) */}
+            <Link href={`/product/${product.slug}`} className="block relative h-56 bg-gray-100 rounded-lg overflow-hidden mb-4">
                 <img
                     src={imageSrc}
                     alt={product.name}
-                    className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* Badge Promo si applicable */}
                 {product.promo_price && product.promo_price > 0 && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 shadow-md">
                         -{Math.round((1 - product.promo_price / product.price) * 100)}%
                     </span>
                 )}
@@ -91,7 +91,7 @@ export default function ProductCard({ product }: { product: Product }) {
                             price: displayPrice,
                             primary_image: product.primary_image
                         }, 1)}
-                        className="flex items-center justify-center gap-2 bg-yann-cyan text-white py-2 rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors"
+                        className="flex items-center justify-center gap-2 bg-yann-cyan text-white py-2 rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors shadow-sm"
                     >
                         <FontAwesomeIcon icon={faCartPlus} size="sm" />
                         Ajouter
