@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faArrowRight, faPlay, faTimes } from '@fortawesome/free-solid-svg-icons';
 
@@ -7,40 +7,94 @@ interface ImageSliderProps {
     videoUrl?: string | null;
 }
 
+const AUTOPLAY_DELAY = 4000; // ms entre chaque défilement automatique
+const SWIPE_THRESHOLD = 50;  // px minimum pour considérer que c'est un swipe volontaire
+
 export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isVideoOpen, setIsVideoOpen] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+
+    const touchStartX = useRef<number | null>(null);
+    const touchDeltaX = useRef(0);
 
     // 1. Correction des chemins d'images
     const processedImages = images
         .map(img => img.startsWith('http') ? img : `/storage/${img}`)
-        .filter(img => img && img.length > 0); // Enlever les images vides
+        .filter(img => img && img.length > 0);
 
     // 2. Sécurité : Si aucune image valide, on affiche un placeholder
     const displayImages = processedImages.length > 0 ? processedImages : ['/images/placeholder.jpg'];
 
     // 3. Navigation (basée sur displayImages)
-    const goToPrevious = () => {
-        const isFirstSlide = currentIndex === 0;
-        const newIndex = isFirstSlide ? displayImages.length - 1 : currentIndex - 1;
-        setCurrentIndex(newIndex);
+    const goToPrevious = useCallback(() => {
+        setCurrentIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
+    }, [displayImages.length]);
+
+    const goToNext = useCallback(() => {
+        setCurrentIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+    }, [displayImages.length]);
+
+    // Navigation manuelle (flèches/dots) : on relance le minuteur d'autoplay à zéro
+    // pour éviter un défilement automatique juste après une action de l'utilisateur.
+    const handleManualNav = (action: () => void) => {
+        action();
+        setIsPaused(false);
     };
 
-    const goToNext = () => {
-        const isLastSlide = currentIndex === displayImages.length - 1;
-        const newIndex = isLastSlide ? 0 : currentIndex + 1;
-        setCurrentIndex(newIndex);
+    // --- DÉFILEMENT AUTOMATIQUE (mobile ET desktop) ---
+    useEffect(() => {
+        if (displayImages.length <= 1 || isPaused || isVideoOpen) return;
+
+        const timer = setInterval(() => {
+            goToNext();
+        }, AUTOPLAY_DELAY);
+
+        return () => clearInterval(timer);
+    }, [displayImages.length, isPaused, isVideoOpen, goToNext, currentIndex]);
+
+    // --- SWIPE TACTILE (mobile) ---
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchDeltaX.current = 0;
+        setIsPaused(true); // on suspend l'autoplay pendant que l'utilisateur interagit
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+    };
+
+    const handleTouchEnd = () => {
+        if (Math.abs(touchDeltaX.current) > SWIPE_THRESHOLD) {
+            if (touchDeltaX.current > 0) {
+                goToPrevious(); // swipe vers la droite = image précédente
+            } else {
+                goToNext(); // swipe vers la gauche = image suivante
+            }
+        }
+        touchStartX.current = null;
+        touchDeltaX.current = 0;
+        setIsPaused(false); // on relance l'autoplay après l'interaction
     };
 
     return (
-        <div className="relative w-full h-[500px] bg-gray-100 rounded-2xl overflow-hidden group touch-none">
+        <div
+            className="relative w-full h-[500px] bg-gray-100 rounded-2xl overflow-hidden group touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+        >
 
             {/* --- IMAGE ACTUELLE --- */}
             <div className="w-full h-full relative">
                 <img
                     src={displayImages[currentIndex]}
                     alt="Produit"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-2 select-none transition-opacity duration-300"
+                    draggable={false}
                 />
 
                 {/* Bouton Vidéo (si une vidéo existe) */}
@@ -59,14 +113,14 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
             {displayImages.length > 1 && (
                 <>
                     <button
-                        onClick={goToPrevious}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10 cursor-pointer"
+                        onClick={() => handleManualNav(goToPrevious)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10 cursor-pointer hidden md:flex"
                     >
                         <FontAwesomeIcon icon={faArrowLeft} className="text-yann-blue text-xl" />
                     </button>
                     <button
-                        onClick={goToNext}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10 cursor-pointer"
+                        onClick={() => handleManualNav(goToNext)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10 cursor-pointer hidden md:flex"
                     >
                         <FontAwesomeIcon icon={faArrowRight} className="text-yann-blue text-xl" />
                     </button>
@@ -76,7 +130,7 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
                         {displayImages.map((_, index) => (
                             <button
                                 key={index}
-                                onClick={() => setCurrentIndex(index)}
+                                onClick={() => handleManualNav(() => setCurrentIndex(index))}
                                 className={`transition-all duration-300 cursor-pointer ${
                                     currentIndex === index
                                     ? 'w-10 h-2.5 bg-yann-cyan rounded-full'

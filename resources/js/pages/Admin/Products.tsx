@@ -240,7 +240,16 @@ export default function Products({ products, categories }: ProductsProps) {
                                             <span className="text-gray-400 text-xs">-</span>
                                         )}
                                     </td>
+
+                                    {/* --- COLONNE ACTIONS (AVEC LE BOUTON VOIR) --- */}
                                     <td className="px-4 py-2 text-right whitespace-nowrap flex justify-end gap-1.5">
+                                        <button
+                                            onClick={() => router.visit(`/${secretPath}/products/${product.id}`)}
+                                            className="text-yann-cyan hover:text-blue-700 p-1 rounded transition-colors"
+                                            title="Voir le produit"
+                                        >
+                                            <FontAwesomeIcon icon={faEye} size="sm" />
+                                        </button>
                                         <button
                                             onClick={() => openEditModal(product)}
                                             className="text-yann-cyan hover:text-blue-700 p-1 rounded transition-colors"

@@ -6,7 +6,7 @@ import {
     faEnvelope, faBars, faTimes, faPhone
 } from '@fortawesome/free-solid-svg-icons';
 import { faFacebookF, faTiktok, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
- 
+
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -15,14 +15,15 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
 
-                    {/* --- LOGO (Image réelle) --- */}
+                    {/* --- LOGO (Image réelle) + TEXTE TOUJOURS VISIBLE --- */}
                     <Link href="/" className="flex items-center space-x-3 group">
                         <img
                             src="/logo.webp"
                             alt="YannShop Logo"
                             className="w-10 h-10 rounded-full object-cover border-2 border-yann-cyan shadow-md transition-transform group-hover:scale-105"
                         />
-                        <span className="text-2xl font-bold tracking-tight text-yann-blue hidden sm:block">
+                        {/* SUPPRESSION DE hidden sm:block POUR LE VOIR SUR MOBILE */}
+                        <span className="text-2xl font-bold tracking-tight text-yann-blue">
                             Yann<span className="text-yann-cyan">Shop</span>
                         </span>
                     </Link>
@@ -60,8 +61,8 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* --- MENU MOBILE DÉPLIABLE AVEC ICÔNES --- */}
-            <div className={`md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-md shadow-xl transition-all duration-500 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 opacity-100 border-b border-gray-100' : 'max-h-0 opacity-0'}`}>
+            {/* --- MENU MOBILE DÉPLIABLE (FOND PLEIN, PAS TRANSPARENT) --- */}
+            <div className={`md:hidden absolute top-full left-0 w-full bg-white shadow-xl transition-all duration-500 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="flex flex-col space-y-4 px-6 py-8">
                     <Link href="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 text-yann-blue font-medium text-lg hover:text-yann-cyan transition-colors">
                         <FontAwesomeIcon icon={faHome} className="w-5 text-yann-cyan" />
@@ -201,7 +202,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 {children}
             </main>
             <Footer />
-
         </div>
     );
 }

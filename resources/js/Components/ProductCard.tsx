@@ -36,7 +36,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 <img
                     src={imageSrc}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* Badge Promo si applicable */}
