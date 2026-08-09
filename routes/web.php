@@ -12,9 +12,22 @@ use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\SitemapController;
 
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+Route::get('/robots.txt', function () {
+
+    $content = "User-agent: *\n";
+     $content .= "Disallow: /cart\n";        // page panier : jamais utile en résultat de recherche
+    $content .= "Disallow: /checkout\n";
+    $content .= "Disallow: /orders\n";      // données personnelles côté client, pas de contenu à indexer
+    $content .= "\n";
+    $content .= "Sitemap: " . config('app.url') . "/sitemap.xml\n";
+
+    return response($content, 200)->header('Content-Type', 'text/plain');
+});
 Route::post('/logout', function () {
     Auth::logout();
     return redirect('/');
@@ -26,6 +39,8 @@ Route::post('/checkout', [CheckoutController::class, 'store']);
 Route::get('/checkout/success/{id}', function($id) {
     return Inertia::render('checkout-success', ['orderId' => $id]);
 })->name('checkout.success');
+Route::get('/category/{slug}', [PublicController::class, 'category'])->name('category.show');
+Route::get('/cart', [PublicController::class, 'indexCart'])->name('cart');
 
 Route::get('/orders', [ClientOrderController::class, 'index'])->name('orders');
 Route::post('/orders/search', [ClientOrderController::class, 'search']);

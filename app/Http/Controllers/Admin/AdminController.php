@@ -149,18 +149,26 @@ public function categories()
         'categories' => $categories,
     ]);
 }
+// --- AJOUTER UNE CATÉGORIE ---
 public function storeCategory(Request $request)
 {
     try {
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048', // 2MB max
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('uploads/categories', 'public');
+        }
 
         $category = \App\Models\Category::create([
             'name' => $request->name,
             'slug' => \Illuminate\Support\Str::slug($request->name),
             'description' => $request->description,
+            'image' => $imagePath,
         ]);
 
         return response()->json([
@@ -183,13 +191,25 @@ public function updateCategory(Request $request, $id)
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         $category = \App\Models\Category::findOrFail($id);
+
+        $imagePath = $category->image;
+        if ($request->hasFile('image')) {
+            // Supprimer l'ancienne image si elle existe
+            if ($category->image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($category->image);
+            }
+            $imagePath = $request->file('image')->store('uploads/categories', 'public');
+        }
+
         $category->update([
             'name' => $request->name,
             'slug' => \Illuminate\Support\Str::slug($request->name),
             'description' => $request->description,
+            'image' => $imagePath,
         ]);
 
         return response()->json([
@@ -204,7 +224,6 @@ public function updateCategory(Request $request, $id)
         ], 500);
     }
 }
-
 // --- SUPPRIMER UNE CATÉGORIE ---
 public function deleteCategory($id)
 {

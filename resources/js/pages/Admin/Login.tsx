@@ -1,8 +1,12 @@
+"use client"
+
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faUser, faEye, faEyeSlash, faHourglassHalf } from '@fortawesome/free-solid-svg-icons';
+import {
+    Lock, User, Eye, EyeOff, Hourglass,
+    MapPin, ShoppingBag, ShieldCheck
+} from 'lucide-react';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');
@@ -13,8 +17,7 @@ export default function AdminLogin() {
     const [locked, setLocked] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
-    // Décompte du blocage : un seul intervalle, correctement nettoyé,
-    // qui déverrouille automatiquement le formulaire à zéro.
+    // Décompte du blocage
     useEffect(() => {
         if (timeLeft === null) return;
 
@@ -66,7 +69,7 @@ export default function AdminLogin() {
     const seconds = timeLeft !== null ? timeLeft % 60 : 0;
 
     return (
-        <div className="min-h-screen grid lg:grid-cols-2 bg-white">
+        <div className="min-h-screen grid lg:grid-cols-2 bg-background">
             <style>{`
                 @keyframes yann-route-dash {
                     to { stroke-dashoffset: -24; }
@@ -86,19 +89,18 @@ export default function AdminLogin() {
                 .yann-pulse { animation: yann-pulse-ring 2.2s ease-in-out infinite; }
             `}</style>
 
-            {/* --- PANNEAU GAUCHE : identité de marque (masqué en mobile) --- */}
-            <div className="hidden lg:flex flex-col justify-between bg-yann-blue p-12 relative overflow-hidden">
+            {/* --- PANNEAU GAUCHE : identité de marque --- */}
+            <div className="hidden lg:flex flex-col justify-between bg-primary p-12 relative overflow-hidden">
                 <div className="flex items-center gap-3">
                     <img
                         src="/logo.webp"
                         alt="YannShop"
-                        className="w-11 h-11 rounded-full object-cover border-2 border-white/30"
+                        className="w-11 h-11 rounded-full object-cover border-2 border-primary-foreground/30"
                     />
-                    <span className="text-white font-semibold tracking-wide">YannShop</span>
+                    <span className="text-primary-foreground font-semibold tracking-wide">YannShop</span>
                 </div>
 
-                {/* Signature : deux points de livraison reliés par une route animée,
-                    représentation directe de l'activité réelle (Yaoundé ⇄ Douala). */}
+                {/* SVG animé */}
                 <div className="flex-1 flex items-center justify-center">
                     <svg viewBox="0 0 320 140" className="w-full max-w-sm" aria-hidden="true">
                         <line x1="48" y1="100" x2="272" y2="40" stroke="rgba(255,255,255,0.25)" strokeWidth="2" />
@@ -119,7 +121,7 @@ export default function AdminLogin() {
                     </svg>
                 </div>
 
-                <p className="text-white/70 text-sm max-w-xs leading-relaxed">
+                <p className="text-primary-foreground/70 text-sm max-w-xs leading-relaxed">
                     Deux villes, une seule interface. Pilotez vos commandes et livraisons YannShop depuis cet espace.
                 </p>
             </div>
@@ -128,30 +130,30 @@ export default function AdminLogin() {
             <div className="flex items-center justify-center p-6 sm:p-12">
                 <div className="w-full max-w-sm">
 
-                    {/* En-tête compact, visible uniquement en mobile (le panneau gauche est masqué) */}
+                    {/* En-tête mobile */}
                     <div className="lg:hidden flex flex-col items-center text-center mb-8">
                         <img
                             src="/logo.webp"
                             alt="YannShop"
-                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 shadow-sm mb-3"
+                            className="w-16 h-16 rounded-full object-cover border-2 border-border shadow-sm mb-3"
                         />
-                        <span className="text-yann-blue font-semibold">YannShop</span>
+                        <span className="text-primary font-semibold">YannShop</span>
                     </div>
 
                     <div className="mb-8">
-                        <h1 className="text-2xl font-bold text-yann-blue">Espace gestion</h1>
-                        <p className="text-gray-500 text-sm mt-1">Connectez-vous pour accéder au tableau de bord.</p>
+                        <h1 className="text-2xl font-bold text-primary">Espace gestion</h1>
+                        <p className="text-muted-foreground text-sm mt-1">Connectez-vous pour accéder au tableau de bord.</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5" aria-describedby={error ? 'login-error' : undefined}>
+                    <form onSubmit={handleSubmit} className="space-y-5">
 
-                        <div>
-                            <label htmlFor="admin_email" className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="space-y-2">
+                            <label htmlFor="admin_email" className="text-sm font-medium text-foreground">
                                 Email
                             </label>
                             <div className="relative">
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <FontAwesomeIcon icon={faUser} className="text-sm" />
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                    <User className="size-4" />
                                 </div>
                                 <input
                                     id="admin_email"
@@ -159,20 +161,20 @@ export default function AdminLogin() {
                                     required
                                     autoComplete="username"
                                     disabled={locked}
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yann-cyan focus:border-transparent transition-all outline-none disabled:opacity-50"
+                                    className="w-full rounded-xl border border-input bg-background pl-10 pr-4 py-3 text-sm outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-50"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="admin_password" className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="space-y-2">
+                            <label htmlFor="admin_password" className="text-sm font-medium text-foreground">
                                 Mot de passe
                             </label>
                             <div className="relative">
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <FontAwesomeIcon icon={faLock} className="text-sm" />
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                    <Lock className="size-4" />
                                 </div>
                                 <input
                                     id="admin_password"
@@ -180,7 +182,7 @@ export default function AdminLogin() {
                                     required
                                     autoComplete="current-password"
                                     disabled={locked}
-                                    className="w-full pl-10 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yann-cyan focus:border-transparent transition-all outline-none disabled:opacity-50"
+                                    className="w-full rounded-xl border border-input bg-background pl-10 pr-11 py-3 text-sm outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-50"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
@@ -190,9 +192,9 @@ export default function AdminLogin() {
                                     disabled={locked}
                                     tabIndex={-1}
                                     aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yann-cyan transition-colors disabled:opacity-50"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors disabled:opacity-50"
                                 >
-                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-sm" />
+                                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                 </button>
                             </div>
                         </div>
@@ -203,11 +205,11 @@ export default function AdminLogin() {
                                 role="alert"
                                 className={`p-3.5 rounded-xl text-sm flex items-start gap-2.5 ${
                                     locked
-                                        ? 'bg-amber-50 border border-amber-200 text-amber-800'
-                                        : 'bg-red-50 border border-red-200 text-red-700'
+                                        ? 'bg-amber-50/50 border border-amber-200 text-amber-800'
+                                        : 'bg-destructive/10 border border-destructive/20 text-destructive'
                                 }`}
                             >
-                                {locked && <FontAwesomeIcon icon={faHourglassHalf} className="mt-0.5 text-amber-500" />}
+                                {locked && <Hourglass className="mt-0.5 size-4 text-amber-500" />}
                                 <div>
                                     <p>{error}</p>
                                     {timeLeft !== null && timeLeft > 0 && (
@@ -224,18 +226,18 @@ export default function AdminLogin() {
                             disabled={loading || locked}
                             className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
                                 loading || locked
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-yann-blue text-white hover:bg-yann-blue/90 shadow-lg shadow-yann-blue/20 hover:-translate-y-0.5'
+                                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:-translate-y-0.5'
                             }`}
                         >
                             {loading ? (
                                 <>
-                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                                     Connexion...
                                 </>
                             ) : locked ? (
                                 <>
-                                    <FontAwesomeIcon icon={faLock} className="text-sm" />
+                                    <Lock className="size-4" />
                                     Accès temporairement bloqué
                                 </>
                             ) : (

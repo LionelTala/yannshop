@@ -1,103 +1,94 @@
+"use client"
+
 import { Link } from '@inertiajs/react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faCartPlus } from '@fortawesome/free-solid-svg-icons';
-import { useCart } from '@/contexts/CartContext';
+import { ShoppingBag } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    image: string | null;
+}
 
 interface Product {
     id: number;
     name: string;
     slug: string;
-    primary_image: string;
+    description: string | null;
     price: number;
     promo_price: number | null;
-    category: {
-        name: string;
-    };
+    primary_image: string;
+    category: Category;
 }
 
-export default function ProductCard({ product }: { product: Product }) {
-    const { addToCart } = useCart();
+interface ProductCardProps {
+    product: Product;
+}
 
-    // Calcul du prix affiché
-    const displayPrice = product.promo_price && product.promo_price > 0
-        ? product.promo_price
-        : product.price;
+const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF' }).format(price);
+};
 
-    // Gestion de l'image (chemin local via storage)
-    const imageSrc = product.primary_image.startsWith('http')
-        ? product.primary_image
-        : `/storage/${product.primary_image}`;
+const getImageSrc = (src: string) => {
+    if (!src) return '/placeholder.svg';
+    if (src.startsWith('http')) return src;
+    return `/storage/${src}`;
+};
+
+export function ProductCard({ product }: ProductCardProps) {
+    const { add } = useCart();
 
     return (
-        <div className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 p-4 border border-gray-100 hover:border-yann-cyan/20 h-full flex flex-col group">
-
-            {/* Image du produit (remplissage complet avec object-cover) */}
-            <Link href={`/product/${product.slug}`} className="block relative h-56 bg-gray-100 rounded-lg overflow-hidden mb-4">
-                <img
-                    src={imageSrc}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-
-                {/* Badge Promo si applicable */}
+        <Link
+            href={`/product/${product.slug}`}
+            className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[420px] sm:h-[480px]"
+        >
+            {/* Image : 70% de la hauteur */}
+            <div className="relative w-full h-[70%] overflow-hidden bg-secondary">
                 {product.promo_price && product.promo_price > 0 && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10 shadow-md">
-                        -{Math.round((1 - product.promo_price / product.price) * 100)}%
+                    <span className="absolute left-3 sm:left-4 top-3 sm:top-4 z-10 rounded-full bg-accent px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-accent-foreground">
+                        Promo
                     </span>
                 )}
-            </Link>
+                <img
+                    src={getImageSrc(product.primary_image)}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                />
+            </div>
 
-            {/* Infos produit */}
-            <div className="flex-grow flex flex-col justify-between">
-                <div>
-                    <Link href={`/product/${product.slug}`}>
-                        <h3 className="font-semibold text-yann-blue text-lg line-clamp-1 group-hover:text-yann-cyan transition-colors cursor-pointer">
-                            {product.name}
-                        </h3>
-                    </Link>
-                    <p className="text-xs text-gray-400 mt-1">{product.category?.name || 'Catégorie'}</p>
-                </div>
+            {/* Contenu : 30% de la hauteur */}
+            <div className="flex flex-col justify-between h-[30%] p-4 bg-card">
+                <h3 className="text-sm sm:text-base font-bold text-card-foreground line-clamp-1">{product.name}</h3>
 
-                <div className="mt-3 flex items-baseline gap-2">
-                    {product.promo_price && product.promo_price > 0 ? (
-                        <>
-                            <span className="text-yann-cyan font-bold text-lg">
-                                {new Intl.NumberFormat('fr-FR').format(product.promo_price)} FCFA
-                            </span>
-                            <span className="text-gray-400 line-through text-sm">
-                                {new Intl.NumberFormat('fr-FR').format(product.price)} FCFA
-                            </span>
-                        </>
-                    ) : (
-                        <span className="text-yann-blue font-bold text-lg">
-                            {new Intl.NumberFormat('fr-FR').format(product.price)} FCFA
+                <div className="flex items-baseline gap-2">
+                    <span className="text-sm sm:text-base font-extrabold text-primary">
+                        {formatPrice(product.promo_price && product.promo_price > 0 ? product.promo_price : product.price)}
+                    </span>
+                    {product.promo_price && product.promo_price > 0 && (
+                        <span className="text-xs text-muted-foreground line-through">
+                            {formatPrice(product.price)}
                         </span>
                     )}
                 </div>
 
-                {/* --- BOUTONS D'ACTION --- */}
-                <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-3">
-                    <Link
-                        href={`/product/${product.slug}`}
-                        className="flex items-center justify-center gap-2 bg-gray-100 text-yann-blue py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-                    >
-                        <FontAwesomeIcon icon={faEye} size="sm" />
-                        Détail
-                    </Link>
+                <div className="grid grid-cols-2 gap-2">
                     <button
-                        onClick={() => addToCart({
-                            id: product.id,
-                            name: product.name,
-                            price: displayPrice,
-                            primary_image: product.primary_image
-                        }, 1)}
-                        className="flex items-center justify-center gap-2 bg-yann-cyan text-white py-2 rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors shadow-sm"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            add(product);
+                        }}
+                        className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-primary text-primary-foreground py-1.5 text-xs sm:text-sm font-semibold hover:bg-primary/90 transition-colors"
                     >
-                        <FontAwesomeIcon icon={faCartPlus} size="sm" />
+                        <ShoppingBag className="size-3.5" />
                         Ajouter
                     </button>
+                    <div className="flex items-center justify-center rounded-full border border-primary bg-transparent py-1.5 text-xs sm:text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
+                        Détail
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        </Link>
+    )
 }

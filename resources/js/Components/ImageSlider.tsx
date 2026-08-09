@@ -18,15 +18,10 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
     const touchStartX = useRef<number | null>(null);
     const touchDeltaX = useRef(0);
 
-    // 1. Correction des chemins d'images
-    const processedImages = images
-        .map(img => img.startsWith('http') ? img : `/storage/${img}`)
-        .filter(img => img && img.length > 0);
+    // 1. CORRECTION ICI : On utilise directement le tableau images (déjà préfixé par product.tsx)
+    const displayImages = images.length > 0 ? images : ['/images/placeholder.jpg'];
 
-    // 2. Sécurité : Si aucune image valide, on affiche un placeholder
-    const displayImages = processedImages.length > 0 ? processedImages : ['/images/placeholder.jpg'];
-
-    // 3. Navigation (basée sur displayImages)
+    // 2. Navigation
     const goToPrevious = useCallback(() => {
         setCurrentIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
     }, [displayImages.length]);
@@ -35,14 +30,12 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
         setCurrentIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
     }, [displayImages.length]);
 
-    // Navigation manuelle (flèches/dots) : on relance le minuteur d'autoplay à zéro
-    // pour éviter un défilement automatique juste après une action de l'utilisateur.
     const handleManualNav = (action: () => void) => {
         action();
         setIsPaused(false);
     };
 
-    // --- DÉFILEMENT AUTOMATIQUE (mobile ET desktop) ---
+    // --- DÉFILEMENT AUTOMATIQUE ---
     useEffect(() => {
         if (displayImages.length <= 1 || isPaused || isVideoOpen) return;
 
@@ -53,11 +46,11 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
         return () => clearInterval(timer);
     }, [displayImages.length, isPaused, isVideoOpen, goToNext, currentIndex]);
 
-    // --- SWIPE TACTILE (mobile) ---
+    // --- SWIPE TACTILE ---
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
         touchDeltaX.current = 0;
-        setIsPaused(true); // on suspend l'autoplay pendant que l'utilisateur interagit
+        setIsPaused(true);
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
@@ -68,14 +61,14 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
     const handleTouchEnd = () => {
         if (Math.abs(touchDeltaX.current) > SWIPE_THRESHOLD) {
             if (touchDeltaX.current > 0) {
-                goToPrevious(); // swipe vers la droite = image précédente
+                goToPrevious();
             } else {
-                goToNext(); // swipe vers la gauche = image suivante
+                goToNext();
             }
         }
         touchStartX.current = null;
         touchDeltaX.current = 0;
-        setIsPaused(false); // on relance l'autoplay après l'interaction
+        setIsPaused(false);
     };
 
     return (
@@ -97,7 +90,7 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
                     draggable={false}
                 />
 
-                {/* Bouton Vidéo (si une vidéo existe) */}
+                {/* Bouton Vidéo */}
                 {videoUrl && (
                     <button
                         onClick={() => setIsVideoOpen(true)}
@@ -109,7 +102,7 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
                 )}
             </div>
 
-            {/* --- FLÈCHES DE NAVIGATION (basées sur displayImages) --- */}
+            {/* --- FLÈCHES DE NAVIGATION --- */}
             {displayImages.length > 1 && (
                 <>
                     <button
@@ -125,7 +118,7 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
                         <FontAwesomeIcon icon={faArrowRight} className="text-yann-blue text-xl" />
                     </button>
 
-                    {/* INDICATEURS (Dots) toujours visibles */}
+                    {/* INDICATEURS */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
                         {displayImages.map((_, index) => (
                             <button
@@ -142,7 +135,7 @@ export default function ImageSlider({ images, videoUrl }: ImageSliderProps) {
                 </>
             )}
 
-            {/* --- MODALE VIDÉO (Lightbox) --- */}
+            {/* --- MODALE VIDÉO --- */}
             {isVideoOpen && videoUrl && (
                 <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4">
                     <div className="relative w-full max-w-4xl bg-black rounded-2xl overflow-hidden">

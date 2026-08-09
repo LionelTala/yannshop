@@ -1,62 +1,69 @@
-import { Head, Link } from '@inertiajs/react';
-import PublicLayout from '@/Layouts/PublicLayout';
-import ProductCard from '@/Components/ProductCard';
-import FloatingCart from '@/Components/FloatingCart';
+import { Head } from '@inertiajs/react';
+import { withPublicLayout } from '@/Layouts/PublicLayout';
+import { Link } from '@inertiajs/react';
+import { ArrowRight, Truck, ShieldCheck, Headphones } from 'lucide-react';
+import { SectionHeader } from '@/Components/SectionHeader';
+import { ProductGridSection } from '@/Components/ProductGridSection';
+import { CategoryCard } from '@/Components/CategoryCard';
+
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    image: string | null;
+}
 
 interface Product {
     id: number;
     name: string;
     slug: string;
-    primary_image: string;
+    description: string | null;
     price: number;
     promo_price: number | null;
-    category: { name: string };
+    primary_image: string;
+    category: Category;
 }
 
 interface WelcomeProps {
-    popularProducts: Product[];
     promoProducts: Product[];
+    popularProducts: Product[];
+    categories: Category[];
 }
 
-Welcome.layout = (page: React.ReactNode) => (
-    <PublicLayout socials={{
-        facebook: 'https://facebook.com/yannshop',
-        instagram: 'https://instagram.com/yannshop',
-        whatsapp: 'https://wa.me/237691234567'
-    }}>
-        {page}
-    </PublicLayout>
-);
+Welcome.layout = withPublicLayout;
 
-export default function Welcome({ popularProducts, promoProducts }: WelcomeProps) {
+export default function Welcome({ promoProducts, popularProducts, categories }: WelcomeProps) {
     const siteUrl = 'https://yannshop.com'; // remplace par ton vrai domaine
     const pageTitle = 'YannShop - Boutique en ligne à Yaoundé et Douala';
-    const pageDescription = 'Achetez en ligne chez YannShop et faites-vous livrer rapidement à Yaoundé et Douala. Découvrez nos produits de qualité et nos promotions du moment.';
+    const pageDescription = 'Achetez en ligne chez YannShop et faites-vous livrer rapidement à Yaoundé et Douala. Produits de qualité, paiement à la livraison, support 7j/7.';
 
-    // Données structurées : identité du site, exploitées par Google pour le
-    // "Knowledge Panel" et l'affichage d'une barre de recherche interne
-    // dans les résultats (Sitelinks Search Box).
+    // LocalBusiness plutôt qu'un simple Organization générique : plus pertinent
+    // pour le référencement local, avec les zones desservies explicitement listées.
     const structuredData = {
         '@context': 'https://schema.org',
-        '@type': 'Organization',
+        '@type': 'LocalBusiness',
         name: 'YannShop',
         url: siteUrl,
-        logo: `${siteUrl}/logo.webp`,
+        image: `${siteUrl}/logo.webp`,
+        priceRange: 'FCFA',
+        areaServed: [
+            { '@type': 'City', name: 'Yaoundé' },
+            { '@type': 'City', name: 'Douala' },
+        ],
         sameAs: [
             'https://facebook.com/yannshop',
             'https://instagram.com/yannshop',
         ],
-        areaServed: ['Yaoundé', 'Douala'],
     };
 
     return (
-        <div className="flex flex-col">
+        <div>
             <Head>
                 <title>{pageTitle}</title>
                 <meta name="description" content={pageDescription} />
                 <link rel="canonical" href={siteUrl} />
 
-                {/* Open Graph : aperçus de partage WhatsApp/Facebook/Instagram — canaux clés au Cameroun */}
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content={pageTitle} />
                 <meta property="og:description" content={pageDescription} />
@@ -64,71 +71,113 @@ export default function Welcome({ popularProducts, promoProducts }: WelcomeProps
                 <meta property="og:image" content={`${siteUrl}/logo.webp`} />
                 <meta property="og:locale" content="fr_FR" />
 
-                {/* Twitter Card (aussi utilisé par certains agrégateurs) */}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={pageTitle} />
                 <meta name="twitter:description" content={pageDescription} />
 
-                <script type="application/ld+json">
-                    {JSON.stringify(structuredData)}
-                </script>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+                />
             </Head>
 
-            <div className="fixed bottom-10 right-8 z-50">
-                <FloatingCart />
-            </div>
-
-            {/* SECTION 1 : Présentation boutique */}
-            <section className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 bg-white">
-                <div className="max-w-4xl">
-                    <h1 className="text-5xl sm:text-6xl font-bold text-yann-blue leading-tight mb-6">
-                        Bienvenue chez <br />
-                        <span className="text-yann-cyan">YannShop</span>
+            {/* Hero */}
+            <section className="relative overflow-hidden bg-primary text-primary-foreground">
+                <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-accent/30 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-32 -left-16 size-72 rounded-full bg-accent/20 blur-3xl" />
+                <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-16 sm:py-20">
+                    <span className="w-fit rounded-full bg-accent/20 px-4 py-1.5 text-sm font-semibold text-accent">
+                        🚀 Nouveautés
+                    </span>
+                    {/* h1 conservé identique au pageTitle en substance : bon signal SEO
+                        (cohérence entre le titre de la page et le titre visible) */}
+                    <h1 className="max-w-2xl text-balance text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+                        Votre boutique en ligne de confiance à Yaoundé et Douala
                     </h1>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-8">
-                        Votre boutique en ligne de confiance à Yaoundé et Douala.
-                        Découvrez nos produits de qualité et faites-vous livrer directement à votre porte.
+                    <p className="max-w-xl text-pretty text-base text-primary-foreground/80 sm:text-lg">
+                        Découvrez notre sélection de produits exclusifs. Commandez en quelques clics,
+                        livraison rapide garantie.
                     </p>
-                    <Link href="/shop" className="bg-yann-blue text-white px-8 py-3.5 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-                        Découvrir nos produits
-                    </Link>
+                    <div className="flex flex-wrap gap-3">
+                        <Link
+                            href="/shop"
+                            className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-semibold text-accent-foreground transition-transform hover:scale-105"
+                        >
+                            Découvrir les produits
+                            <ArrowRight className="size-4" />
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                        >
+                            Nous contacter
+                        </Link>
+                    </div>
                 </div>
             </section>
 
-            {/* SECTION 2 : Produits en promo */}
-            {promoProducts.length > 0 && (
-                <section className="py-16 bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4">
-                        <div className="flex justify-between items-end mb-8">
-                            <h2 className="text-3xl font-bold text-yann-blue">Promos du moment</h2>
-                            <Link href="/shop" className="text-yann-cyan font-medium hover:underline">Voir tout</Link>
+            {/* Avantages */}
+            <section className="border-b border-border bg-card">
+                <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-6 sm:grid-cols-3">
+                    {[
+                        { icon: Truck, title: "Livraison rapide", text: "Partout, en un temps record" },
+                        { icon: ShieldCheck, title: "Paiement sécurisé", text: "À la livraison ou en ligne" },
+                        { icon: Headphones, title: "Support 7j/7", text: "Une équipe à votre écoute" },
+                    ].map((f) => (
+                        <div key={f.title} className="flex items-center gap-3">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                                <f.icon className="size-5" />
+                            </span>
+                            <div>
+                                <p className="text-sm font-semibold text-card-foreground">{f.title}</p>
+                                <p className="text-xs text-muted-foreground">{f.text}</p>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                            {promoProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+            </section>
+
+            <div className="mx-auto max-w-6xl px-4">
+                {/* Promos */}
+                {promoProducts.length > 0 && (
+                    <section className="py-12">
+                        <SectionHeader
+                            title="Produits en promo"
+                            subtitle="Profitez de nos meilleures offres du moment"
+                            href="/shop"
+                        />
+                        <ProductGridSection products={promoProducts} />
+                    </section>
+                )}
+
+                {/* Populaires */}
+                {popularProducts.length > 0 && (
+                    <section className="py-4 pb-12">
+                        <SectionHeader
+                            title="Produits populaires"
+                            subtitle="Les préférés de nos clients"
+                            href="/shop"
+                        />
+                        <ProductGridSection products={popularProducts} />
+                    </section>
+                )}
+
+                {/* Catégories */}
+                {categories.length > 0 && (
+                    <section className="py-4 pb-12">
+                        <SectionHeader
+                            title="Quel type de produit vous intéresse ?"
+                            subtitle="Explorez nos catégories"
+                            href="/categories"
+                        />
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {categories.map((c) => (
+                                <CategoryCard key={c.id} category={c} />
                             ))}
                         </div>
-                    </div>
-                </section>
-            )}
-
-            {/* SECTION 3 : Produits populaires */}
-            {popularProducts.length > 0 && (
-                <section className="py-16 bg-white">
-                    <div className="max-w-7xl mx-auto px-4">
-                        <div className="flex justify-between items-end mb-8">
-                            <h2 className="text-3xl font-bold text-yann-blue">Produits populaires</h2>
-                            <Link href="/shop" className="text-yann-cyan font-medium hover:underline">Voir tout</Link>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                            {popularProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
+                    </section>
+                )}
+            </div>
         </div>
     );
 }

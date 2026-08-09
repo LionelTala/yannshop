@@ -1,104 +1,101 @@
-import { Head, Link } from '@inertiajs/react';
-import PublicLayout from '@/Layouts/PublicLayout';
-import ProductCard from '@/Components/ProductCard';
-import CategoryFilter from '@/Components/CategoryFilter';
-import FloatingCart from '@/Components/FloatingCart';
+import { Head } from '@inertiajs/react';
+import { withPublicLayout } from '@/Layouts/PublicLayout';
+import { ProductsBrowser } from '@/Components/ProductsBrowser';
 
 interface Category {
     id: number;
     name: string;
+    slug: string;
+    image: string | null;
 }
 
 interface Product {
     id: number;
     name: string;
     slug: string;
-    primary_image: string;
+    description: string | null;
     price: number;
     promo_price: number | null;
-    category: { name: string };
+    primary_image: string;
+    category: Category;
 }
 
 interface ShopProps {
     products: {
         data: Product[];
-        meta?: {
-            current_page: number;
-            last_page: number;
-            links: { url: string | null; label: string; active: boolean }[];
-        };
+        current_page: number;
+        last_page: number;
+        total?: number; // ajouté : manquait alors qu'il était déjà utilisé plus bas
     };
     categories: Category[];
     filters: {
         category: string;
+        search: string | null;
     };
 }
 
-Shop.layout = (page: React.ReactNode) => (
-    <PublicLayout socials={{
-        facebook: 'https://facebook.com/yannshop',
-        instagram: 'https://instagram.com/yannshop',
-        whatsapp: 'https://wa.me/237691234567'
-    }}>
-        {page}
-    </PublicLayout>
-);
+Shop.layout = withPublicLayout;
 
 export default function Shop({ products, categories, filters }: ShopProps) {
     const siteUrl = 'https://yannshop.com'; // remplace par ton vrai domaine
 
-    // Retrouve le nom lisible de la catégorie active, pour personnaliser
-    // le titre/la description plutôt que d'afficher un texte générique.
+    // Nombre réel de résultats, avec repli sûr si le backend ne renvoie pas
+    // "total" (évite le "undefined produit(s) trouvé(s)").
+    const resultsCount = products.total ?? products.data.length;
+
     const activeCategory = filters.category
         ? categories.find((c) => String(c.id) === String(filters.category))
         : null;
 
-    const currentPage = products.meta?.current_page ?? 1;
+    // --- Titre/description dynamiques selon le contexte (recherche > catégorie > vue générale) ---
+    let pageTitle = 'Tous nos produits - YannShop';
+    let pageDescription = 'Découvrez notre sélection de produits de qualité, livrables à Yaoundé et Douala.';
+    let heading = 'Tous nos produits';
+    let subheading = "Filtrez par catégorie ou parcourez l'ensemble du catalogue.";
 
-    const pageTitle = activeCategory
-        ? `${activeCategory.name} - YannShop`
-        : 'Nos Produits - YannShop';
+    if (filters.search) {
+        pageTitle = `Résultats pour "${filters.search}" - YannShop`;
+        pageDescription = `${resultsCount} produit(s) trouvé(s) pour "${filters.search}" chez YannShop, livraison à Yaoundé et Douala.`;
+        heading = `Résultats pour "${filters.search}"`;
+        subheading = `${resultsCount} produit(s) trouvé(s) pour votre recherche.`;
+    } else if (activeCategory) {
+        pageTitle = `${activeCategory.name} - YannShop`;
+        pageDescription = `Découvrez nos produits ${activeCategory.name} disponibles à Yaoundé et Douala, avec livraison rapide.`;
+        heading = activeCategory.name;
+        subheading = pageDescription;
+    }
 
-    const pageDescription = activeCategory
-        ? `Découvrez nos produits ${activeCategory.name} disponibles à Yaoundé et Douala, avec livraison rapide.`
-        : 'Découvrez notre sélection de produits de qualité, livrables à Yaoundé et Douala.';
-
+    const currentPage = products.current_page ?? 1;
     const fullTitle = currentPage > 1 ? `${pageTitle} - Page ${currentPage}` : pageTitle;
 
-    // URL canonique auto-référencée : chaque combinaison filtre + page est une
-    // page de contenu distincte et légitime, pas un doublon à fusionner.
+    // Canonical auto-référencé : chaque combinaison filtre/recherche/page est
+    // une page de contenu distincte, pas un doublon à fusionner.
     const canonicalUrl = typeof window !== 'undefined'
         ? `${siteUrl}${window.location.pathname}${window.location.search}`
-        : siteUrl + '/shop';
+        : `${siteUrl}/shop`;
 
-    // Liens de pagination précédente/suivante pour le head (aide certains
-    // moteurs à comprendre la séquence de pages).
-    const prevLink = products.meta?.links?.find((l) => l.label.includes('Previous') || l.label.includes('&laquo;'));
-    const nextLink = products.meta?.links?.find((l) => l.label.includes('Next') || l.label.includes('&raquo;'));
-
-    // Données structurées : liste de produits affichés sur cette page,
-    // avec prix (promo si présent) — aide Google à comprendre le contenu
-    // de la grille, potentiellement éligible à des extraits enrichis.
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
         itemListElement: products.data.map((product, index) => ({
             '@type': 'ListItem',
             position: index + 1,
-            url: `${siteUrl}/shop/${product.slug}`,
+            url: `${siteUrl}/product/${product.slug}`,
             name: product.name,
         })),
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mx-auto max-w-6xl px-4 py-10">
             <Head>
                 <title>{fullTitle}</title>
                 <meta name="description" content={pageDescription} />
                 <link rel="canonical" href={canonicalUrl} />
 
-                {prevLink?.url && <link rel="prev" href={`${siteUrl}${prevLink.url}`} />}
-                {nextLink?.url && <link rel="next" href={`${siteUrl}${nextLink.url}`} />}
+                {/* Pas d'indexation pour les résultats de recherche : contenu
+                    généré dynamiquement par requête utilisateur, sans valeur
+                    de destination stable pour Google. */}
+                {filters.search && <meta name="robots" content="noindex, follow" />}
 
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content={fullTitle} />
@@ -106,74 +103,27 @@ export default function Shop({ products, categories, filters }: ShopProps) {
                 <meta property="og:url" content={canonicalUrl} />
 
                 {products.data.length > 0 && (
-                    <script type="application/ld+json">
-                        {JSON.stringify(structuredData)}
-                    </script>
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+                    />
                 )}
             </Head>
 
-            <div className="fixed bottom-10 right-8 z-50">
-                <FloatingCart />
-            </div>
-
-            {/* Titre et description */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-yann-blue">
-                    {activeCategory ? activeCategory.name : 'Nos Produits'}
+            <header className="mb-8">
+                <h1 className="text-balance text-2xl font-extrabold tracking-tight text-primary sm:text-3xl">
+                    {heading}
                 </h1>
-                <p className="text-gray-500 mt-2">
-                    {pageDescription}
+                <p className="mt-2 text-muted-foreground">
+                    {subheading}
                 </p>
-            </div>
-
-            {/* Filtres par catégorie */}
-            <CategoryFilter categories={categories} currentCategory={filters.category} />
-
-            {/* Grille de produits */}
-            {products.data.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {products.data.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-lg">Aucun produit trouvé dans cette catégorie.</p>
-                    <Link href="/shop" className="mt-4 inline-block text-yann-cyan font-medium hover:underline">
-                        Voir tous les produits
-                    </Link>
-                </div>
-            )}
-
-            {/* Pagination */}
-            {products?.meta?.links && products.meta.last_page > 1 && (
-                <div className="mt-10 flex justify-center gap-2">
-                    {products.meta.links.map((link, index) =>
-                        link.url ? (
-                            <Link
-                                key={index}
-                                href={link.url}
-                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                                    link.active
-                                        ? 'bg-yann-cyan text-white border-yann-cyan'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:border-yann-cyan hover:text-yann-cyan'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ) : (
-                            // Pas de lien réel disponible (ex: "Précédent" sur la page 1) :
-                            // rendu en <span> non cliquable plutôt qu'un Link vers "#"
-                            // qui provoquait un saut de page inutile.
-                            <span
-                                key={index}
-                                className="px-4 py-2 rounded-lg border text-sm font-medium bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed"
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        )
-                    )}
-                </div>
-            )}
-
+            </header>
+            <ProductsBrowser
+                products={products}
+                categories={categories}
+                filters={filters}
+                baseUrl="/shop"
+            />
         </div>
     );
 }

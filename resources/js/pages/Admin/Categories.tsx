@@ -11,6 +11,7 @@ interface Category {
     name: string;
     slug: string;
     description: string | null;
+    image: string | null;
 }
 
 interface CategoriesProps {
@@ -25,28 +26,46 @@ export default function Categories({ categories }: CategoriesProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [formData, setFormData] = useState({ name: '', description: '' });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+
+    // Gestion de l'image (aperçu)
+    const getImageSrc = (src: string | null) => {
+        if (!src) return null;
+        if (src.startsWith('http')) return src;
+        return `/storage/${src}`;
+    };
 
     // --- OUVRIR LA MODALE ---
     const openCreateModal = () => {
         setEditingCategory(null);
         setFormData({ name: '', description: '' });
+        setImageFile(null);
         setIsModalOpen(true);
     };
 
     const openEditModal = (category: Category) => {
         setEditingCategory(category);
         setFormData({ name: category.name, description: category.description || '' });
+        setImageFile(null);
         setIsModalOpen(true);
     };
 
     // --- ENREGISTRER (Ajout ou Modification) ---
     const handleSave = async () => {
         try {
+            const formDataObj = new FormData();
+            formDataObj.append('name', formData.name);
+            formDataObj.append('description', formData.description || '');
+            if (imageFile) {
+                formDataObj.append('image', imageFile);
+            }
+
             if (editingCategory) {
-                await axios.put(`/${secretPath}/categories/${editingCategory.id}`, formData);
+                formDataObj.append('_method', 'PUT');
+                await axios.post(`/${secretPath}/categories/${editingCategory.id}`, formDataObj);
                 showToast('Catégorie modifiée avec succès', 'success');
             } else {
-                await axios.post(`/${secretPath}/categories`, formData);
+                await axios.post(`/${secretPath}/categories`, formDataObj);
                 showToast('Catégorie ajoutée avec succès', 'success');
             }
 
@@ -89,12 +108,13 @@ export default function Categories({ categories }: CategoriesProps) {
 
                 {/* --- WRAPPER POUR SCROLL HORIZONTAL SUR MOBILE --- */}
                 <div className="w-full overflow-x-auto">
-                    <table className="w-full text-sm min-w-[600px]">
+                    <table className="w-full text-sm min-w-[700px]">
                         <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase border-b border-gray-100">
                             <tr>
                                 <th className="px-4 py-3 font-semibold sticky left-0 bg-gray-50 z-10 min-w-[130px]">Nom</th>
                                 <th className="px-4 py-3 font-semibold min-w-[130px]">Slug</th>
                                 <th className="px-4 py-3 font-semibold min-w-[150px]">Description</th>
+                                <th className="px-4 py-3 font-semibold min-w-[120px]">Image</th>
                                 <th className="px-4 py-3 font-semibold text-right min-w-[100px]">Actions</th>
                             </tr>
                         </thead>
@@ -110,6 +130,17 @@ export default function Categories({ categories }: CategoriesProps) {
                                         title={category.description || ''}
                                     >
                                         {category.description || '-'}
+                                    </td>
+                                    <td className="px-4 py-2 whitespace-nowrap">
+                                        {category.image ? (
+                                            <img
+                                                src={getImageSrc(category.image)}
+                                                alt={category.name}
+                                                className="w-10 h-10 rounded object-cover bg-gray-100 border border-gray-200"
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-gray-400">-</span>
+                                        )}
                                     </td>
 
                                     {/* --- ACTIONS TOUJOURS VISIBLES --- */}
@@ -166,6 +197,29 @@ export default function Categories({ categories }: CategoriesProps) {
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 />
+                            </div>
+                            {/* --- IMAGE DE LA CATÉGORIE --- */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Image (Optionnel)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yann-cyan outline-none"
+                                />
+                                {editingCategory && editingCategory.image && !imageFile && (
+                                    <div className="mt-2">
+                                        <p className="text-xs text-gray-500 mb-1">Image actuelle :</p>
+                                        <img
+                                            src={getImageSrc(editingCategory.image)}
+                                            alt="Image catégorie"
+                                            className="w-20 h-20 rounded object-cover border border-gray-200"
+                                        />
+                                    </div>
+                                )}
+                                {imageFile && (
+                                    <p className="text-xs text-green-600 mt-1">✅ {imageFile.name} sélectionné</p>
+                                )}
                             </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-6">
