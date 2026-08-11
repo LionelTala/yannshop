@@ -11,7 +11,7 @@ const Footer = () => {
     const socials = (props as any).socials || {
         facebook: 'https://facebook.com/yannshop',
         tiktok: 'https://tiktok.com/@yannshop',
-        whatsapp: 'https://wa.me/237659666110'
+        whatsapp: 'https://wa.me/237694375229'
     };
     const currentYear = new Date().getFullYear();
 
@@ -63,11 +63,11 @@ const Footer = () => {
                             <ul className="space-y-3 text-sm">
                                 <li className="flex items-center space-x-3">
                                     <FontAwesomeIcon icon={faPhone} className="text-yann-cyan w-4" />
-                                    <span>+237 691 234 567</span>
+                                    <span>+237 694 37 52 29</span>
                                 </li>
                                 <li className="flex items-center space-x-3">
                                     <FontAwesomeIcon icon={faEnvelope} className="text-yann-cyan w-4" />
-                                    <span>contact@yannshop.cm</span>
+                                    <span>contact@yannshop.com</span>
                                 </li>
                             </ul>
                         </div>

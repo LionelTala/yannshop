@@ -15,8 +15,8 @@ export default function ContactPage({ phone, email, address }: ContactProps) {
     const siteUrl = 'https://yannshop.com'; // remplace par ton vrai domaine
 
     // Valeurs par défaut si Laravel n'envoie rien
-    const resolvedPhone = phone || "+237 691 234 567";
-    const resolvedEmail = email || "contact@yannshop.cm";
+    const resolvedPhone = phone || "+237 694 37 52 29";
+    const resolvedEmail = email || "contact@yannshop.com";
     const resolvedAddress = address || "Yaoundé & Douala, Cameroun";
 
     const infos = [
