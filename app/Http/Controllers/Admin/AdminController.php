@@ -446,11 +446,15 @@ public function deleteMessage($id)
 
 
 // === PAGE MON PROFIL (Vue React) ===
+// Modifiée pour inclure la liste des utilisateurs admin existants
 public function profile()
 {
     $user = auth()->user();
     return Inertia::render('Admin/Profile', [
         'user' => $user,
+        'users' => \App\Models\User::select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get(),
     ]);
 }
 
@@ -490,6 +494,56 @@ public function updatePassword(Request $request)
     return response()->json([
         'success' => true,
         'message' => 'Mot de passe changé avec succès !',
+    ]);
+}
+
+// === CRÉER UN NOUVEL UTILISATEUR ADMIN ===
+public function storeUser(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    $newUser = \App\Models\User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => bcrypt($validated['password']),
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Utilisateur créé avec succès !',
+        'user' => [
+            'id' => $newUser->id,
+            'name' => $newUser->name,
+            'email' => $newUser->email,
+        ],
+    ]);
+}
+
+// === SUPPRIMER UN UTILISATEUR ADMIN ===
+// Bonus : sans ça, la gestion serait incomplète (on peut ajouter mais jamais retirer).
+public function destroyUser($id)
+{
+    $currentUser = auth()->user();
+
+    // Sécurité : on ne peut jamais se supprimer soi-même via cette route
+    // (éviterait de se retrouver bloqué dehors sans autre admin pour se reconnecter).
+    if ((int) $id === $currentUser->id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Vous ne pouvez pas supprimer votre propre compte.',
+        ], 422);
+    }
+
+    $user = \App\Models\User::findOrFail($id);
+    $user->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Utilisateur supprimé avec succès.',
     ]);
 }
 }

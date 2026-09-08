@@ -108,4 +108,7 @@ Route::get('/profile', [AdminController::class, 'profile'])->name('admin.profile
 // Actions
 Route::put('/profile', [AdminController::class, 'updateProfile']);
 Route::put('/profile/password', [AdminController::class, 'updatePassword']);
+
+Route::post('/profile/users', [AdminController::class, 'storeUser']);
+Route::delete('/profile/users/{id}', [AdminController::class, 'destroyUser']);
 });
