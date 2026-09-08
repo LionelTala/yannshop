@@ -3,6 +3,7 @@ import '../css/app.css';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { AdminProvider } from './contexts/AdminContext';
+import { ErrorBoundary } from './Components/ErrorBoundary';
 
 
 
@@ -30,21 +31,24 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    resolve: (name) => resolvePageComponent(
+    resolve: (name) => resolvePageComponent<any>(
         `./pages/${name}.tsx`,
         import.meta.glob('./pages/**/*.tsx')
     ),
+
     setup({ el, App, props }) {
         const root = createRoot(el);
         root.render(
-            <ToastProvider>
-            <CartProvider>
-                <AdminProvider>
-                        <App {...props} />
-                </AdminProvider>
+            <ErrorBoundary> 
+                <ToastProvider>
+                    <CartProvider>
+                        <AdminProvider>
+                            <App {...props} />
+                        </AdminProvider>
+                    </CartProvider>
+                </ToastProvider>
+            </ErrorBoundary>
 
-            </CartProvider>
-            </ToastProvider>
     );
     },
     progress: {
