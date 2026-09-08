@@ -70,26 +70,26 @@ class InfobipService
     // Notification Nouvelle Commande (avec détails produits)
     public static function sendNewOrderWhatsApp($order)
     {
-        $message = "🛒 *NOUVELLE COMMANDE YANNSHOP*\n\n";
-        $message .= "👤 Client : " . $order->customer_name . "\n";
-        $message .= "📞 Tél : " . $order->customer_phone . "\n\n";
-        $message .= "📍 *ADRESSE DE LIVRAISON*\n";
-        $message .= "🏙️ Ville : " . $order->delivery_city . "\n";
-        $message .= "🏘️ Quartier : " . $order->delivery_neighborhood . "\n";
-        $message .= "📍 Repère : " . ($order->delivery_landmark ?? 'Non précisé') . "\n\n";
+        $message = "*NOUVELLE COMMANDE YANNSHOP*\n\n";
+        $message .= "Client : " . $order->customer_name . "\n";
+        $message .= "Tel : " . $order->customer_phone . "\n\n";
+        $message .= "*ADRESSE DE LIVRAISON*\n";
+        $message .= "Ville : " . $order->delivery_city . "\n";
+        $message .= "Quartier : " . $order->delivery_neighborhood . "\n";
+        $message .= "Repere : " . ($order->delivery_landmark ?? 'Non precise') . "\n\n";
 
-        $message .= "📦 *PRODUITS COMMANDÉS*\n";
+        $message .= "*PRODUITS COMMANDES*\n";
         foreach ($order->items as $index => $item) {
             $productName = $item->product->name ?? 'Produit #' . ($index + 1);
             $qty = $item->quantity;
             $unitPrice = $item->price;
             $subtotal = $qty * $unitPrice;
-            $message .= "  {$index + 1}. {$productName} (x{$qty}) : " . number_format($subtotal, 0, '', ' ') . " FCFA\n";
+            $message .= "  " . ($index + 1) . ". " . $productName . " (x" . $qty . ") : " . number_format($subtotal, 0, '', ' ') . " FCFA\n";
         }
 
-        $message .= "\n💰 *MONTANT TOTAL* : " . number_format($order->total_amount, 0, '', ' ') . " FCFA\n";
-        $message .= "📦 *STATUT* : En attente de traitement\n\n";
-        $message .= "Connectez-vous au Dashboard Admin pour gérer cette commande.";
+        $message .= "\n*MONTANT TOTAL* : " . number_format($order->total_amount, 0, '', ' ') . " FCFA\n";
+        $message .= "*STATUT* : En attente de traitement\n\n";
+        $message .= "Connectez-vous au Dashboard Admin pour gerer cette commande.";
 
         self::sendToMultipleAdmins($message);
     }
@@ -97,13 +97,13 @@ class InfobipService
     // Notification Modification de commande
     public static function sendClientModifiedOrderWhatsApp($order)
     {
-        $message = "✏️ *MODIFICATION DE COMMANDE*\n\n";
-        $message .= "📦 Commande : #" . $order->invoice_number . "\n";
-        $message .= "👤 Client : " . $order->customer_name . "\n\n";
-        $message .= "📍 *NOUVELLE ADRESSE :*\n";
-        $message .= "🏙️ Ville : " . $order->delivery_city . "\n";
-        $message .= "🏘️ Quartier : " . $order->delivery_neighborhood . "\n";
-        $message .= "📍 Repère : " . ($order->delivery_landmark ?? 'Non précisé');
+        $message = "*MODIFICATION DE COMMANDE*\n\n";
+        $message .= "Commande : #" . $order->invoice_number . "\n";
+        $message .= "Client : " . $order->customer_name . "\n\n";
+        $message .= "*NOUVELLE ADRESSE*\n";
+        $message .= "Ville : " . $order->delivery_city . "\n";
+        $message .= "Quartier : " . $order->delivery_neighborhood . "\n";
+        $message .= "Repere : " . ($order->delivery_landmark ?? 'Non precise');
 
         self::sendToMultipleAdmins($message);
     }
@@ -111,11 +111,11 @@ class InfobipService
     // Notification Annulation de commande
     public static function sendClientCancelledOrderWhatsApp($order)
     {
-        $message = "❌ *COMMANDE ANNULÉE PAR LE CLIENT*\n\n";
-        $message .= "📦 Commande : #" . $order->invoice_number . "\n";
-        $message .= "👤 Client : " . $order->customer_name . "\n";
-        $message .= "📞 Tél : " . $order->customer_phone . "\n\n";
-        $message .= "Le client a annulé sa commande.";
+        $message = "*COMMANDE ANNULEE PAR LE CLIENT*\n\n";
+        $message .= "Commande : #" . $order->invoice_number . "\n";
+        $message .= "Client : " . $order->customer_name . "\n";
+        $message .= "Tel : " . $order->customer_phone . "\n\n";
+        $message .= "Le client a annule sa commande.";
 
         self::sendToMultipleAdmins($message);
     }
@@ -123,14 +123,14 @@ class InfobipService
     // Notification Message de contact
     public static function sendContactMessageWhatsApp($data)
     {
-        $message = "📩 *NOUVEAU MESSAGE DE CONTACT*\n\n";
-        $message .= "👤 Nom : " . $data['name'] . "\n";
-        $message .= "📞 Téléphone : " . $data['phone'] . "\n";
+        $message = "*NOUVEAU MESSAGE DE CONTACT*\n\n";
+        $message .= "Nom : " . $data['name'] . "\n";
+        $message .= "Telephone : " . $data['phone'] . "\n";
         if (!empty($data['email'])) {
-            $message .= "📧 Email : " . $data['email'] . "\n";
+            $message .= "Email : " . $data['email'] . "\n";
         }
-        $message .= "📝 Sujet : " . $data['subject'] . "\n\n";
-        $message .= "💬 Message :\n" . $data['message'];
+        $message .= "Sujet : " . $data['subject'] . "\n\n";
+        $message .= "Message :\n" . $data['message'];
 
         self::sendToMultipleAdmins($message);
     }
